@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ワイン検定 模擬テスト</title>
+<style>
+  :root {
+    --wine: #7b1f3a;
+    --wine-light: #a03050;
+    --gold: #c9a84c;
+    --bg: #fdf8f2;
+    --bg-card: #fff;
+    --text: #2c1a1a;
+    --text-light: #6b4c4c;
+    --correct: #2e7d32;
+    --correct-bg: #e8f5e9;
+    --wrong: #c62828;
+    --wrong-bg: #ffebee;
+    --border: #e0cfc0;
+    --shadow: 0 2px 8px rgba(123,31,58,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    background: linear-gradient(135deg, var(--wine) 0%, #4a0e22 100%);
+    color: #fff;
+    text-align: center;
+    padding: 2.5rem 1rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '🍷';
+    font-size: 4rem;
+    position: absolute;
+    top: 1rem; left: 2rem;
+    opacity: 0.15;
+  }
+  header::after {
+    content: '🍷';
+    font-size: 4rem;
+    position: absolute;
+    top: 1rem; right: 2rem;
+    opacity: 0.15;
+  }
+  header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.4rem;
+  }
+  header p {
+    font-size: 0.95rem;
+    opacity: 0.85;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  /* Start screen */
+  #start-screen {
+    text-align: center;
+    padding: 3rem 1rem;
+  }
+  #start-screen h2 {
+    font-size: 1.4rem;
+    color: var(--wine);
+    margin-bottom: 1rem;
+  }
+  #start-screen p {
+    color: var(--text-light);
+    margin-bottom: 2rem;
+    line-height: 1.7;
+  }
+
+  /* Quiz */
+  #quiz-screen { display: none; }
+  #result-screen { display: none; }
+
+  .progress-bar-wrap {
+    background: var(--border);
+    border-radius: 9999px;
+    height: 8px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--wine), var(--gold));
+    border-radius: 9999px;
+    transition: width 0.4s ease;
+  }
+  .progress-label {
+    text-align: right;
+    font-size: 0.82rem;
+    color: var(--text-light);
+    margin-bottom: 0.5rem;
+  }
+
+  .question-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 1.5rem;
+  }
+  .question-number {
+    font-size: 0.8rem;
+    color: var(--wine);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.6rem;
+    text-transform: uppercase;
+  }
+  .question-text {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--text);
+  }
+
+  .choices {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .choice-btn {
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 0.9rem 1.2rem;
+    font-size: 0.97rem;
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    line-height: 1.5;
+  }
+  .choice-btn:hover:not(:disabled) {
+    border-color: var(--wine-light);
+    background: #fef5f7;
+    transform: translateX(4px);
+  }
+  .choice-btn.selected {
+    border-color: var(--wine);
+    background: #fdf0f3;
+  }
+  .choice-btn:disabled { cursor: default; }
+
+  /* Navigation */
+  .nav-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  .btn {
+    background: linear-gradient(135deg, var(--wine), var(--wine-light));
+    color: #fff;
+    border: none;
+    border-radius: 9999px;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    letter-spacing: 0.05em;
+  }
+  .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold), #a87828);
+  }
+  .btn-outline {
+    background: transparent;
+    color: var(--wine);
+    border: 2px solid var(--wine);
+  }
+  .btn-outline:hover { background: #fdf0f3; }
+
+  .unanswered-warning {
+    font-size: 0.85rem;
+    color: var(--wrong);
+    margin-top: 0.5rem;
+    display: none;
+  }
+
+  /* Submit area */
+  .submit-area {
+    text-align: center;
+    padding: 2rem 0;
+    border-top: 1px dashed var(--border);
+    margin-top: 1rem;
+  }
+  .submit-area p {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Result screen */
+  .score-card {
+    background: linear-gradient(135deg, var(--wine) 0%, #4a0e22 100%);
+    color: #fff;
+    border-radius: 20px;
+    padding: 2.5rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(123,31,58,0.3);
+  }
+  .score-label { font-size: 1rem; opacity: 0.85; margin-bottom: 0.5rem; }
+  .score-number {
+    font-size: 4rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .score-number span { font-size: 1.5rem; opacity: 0.7; }
+  .score-percent {
+    font-size: 1.4rem;
+    margin-top: 0.5rem;
+    color: var(--gold);
+    font-weight: 700;
+  }
+  .score-message {
+    margin-top: 1rem;
+    font-size: 1.05rem;
+    opacity: 0.9;
+  }
+
+  .result-stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    justify-content: center;
+  }
+  .stat-box {
+    flex: 1;
+    max-width: 160px;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .stat-correct { background: var(--correct-bg); color: var(--correct); }
+  .stat-wrong { background: var(--wrong-bg); color: var(--wrong); }
+  .stat-box .stat-num { font-size: 2rem; font-weight: 800; display: block; }
+
+  .review-section h2 {
+    font-size: 1.2rem;
+    color: var(--wine);
+    margin-bottom: 1.2rem;
+    border-left: 4px solid var(--wine);
+    padding-left: 0.75rem;
+  }
+
+  .review-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.4rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .review-item.correct-item {
+    border-left: 4px solid var(--correct);
+  }
+  .review-item.wrong-item {
+    border-left: 4px solid var(--wrong);
+  }
+  .review-q-num {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+  .correct-item .review-q-num { color: var(--correct); }
+  .wrong-item .review-q-num { color: var(--wrong); }
+
+  .review-q-text {
+    font-size: 0.97rem;
+    font-weight: 600;
+    margin-bottom: 0.8rem;
+    line-height: 1.6;
+  }
+  .review-answer-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  .badge {
+    font-size: 0.8rem;
+    border-radius: 9999px;
+    padding: 0.3rem 0.9rem;
+    font-weight: 700;
+  }
+  .badge-your { background: var(--wrong-bg); color: var(--wrong); }
+  .badge-correct { background: var(--correct-bg); color: var(--correct); }
+  .badge-your-correct { background: var(--correct-bg); color: var(--correct); }
+
+  .explanation {
+    background: #fff8e1;
+    border-left: 3px solid var(--gold);
+    border-radius: 0 8px 8px 0;
+    padding: 0.8rem 1rem;
+    font-size: 0.88rem;
+    color: #5a4a00;
+    line-height: 1.7;
+    margin-top: 0.6rem;
+  }
+  .explanation strong { color: var(--wine); }
+
+  .all-correct-msg {
+    text-align: center;
+    padding: 2rem;
+    color: var(--correct);
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+
+  /* No answer indicator in result */
+  .result-choice {
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+  }
+  .result-choice.correct-choice {
+    background: var(--correct-bg);
+    color: var(--correct);
+    font-weight: 600;
+  }
+  .result-choice.wrong-choice {
+    background: var(--wrong-bg);
+    color: var(--wrong);
+    text-decoration: line-through;
+    opacity: 0.85;
+  }
+
+  /* Scroll to top */
+  .back-to-top {
+    text-align: center;
+    margin-top: 2rem;
+  }
+
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.4rem; }
+    .question-card { padding: 1.3rem; }
+    .score-number { font-size: 3rem; }
+    .result-stats { flex-direction: column; align-items: center; }
+    .stat-box { max-width: none; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍷 ワイン検定 模擬テスト</h1>
+  <p>全50問 ｜ 3択形式</p>
+</header>
+
+<div class="container">
+
+  <!-- Start Screen -->
+  <div id="start-screen">
+    <h2>テストを始める前に</h2>
+    <p>全50問の3択問題です。<br>
+       すべて回答してから「採点する」を押してください。<br>
+       間違えた問題には解説が表示されます。</p>
+    <button class="btn btn-gold" onclick="startQuiz()">テスト開始 ▶</button>
+  </div>
+
+  <!-- Quiz Screen -->
+  <div id="quiz-screen">
+    <div class="progress-label" id="progress-label">1 / 50</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar" style="width:2%"></div>
+    </div>
+
+    <div id="questions-container"></div>
+
+    <div class="submit-area">
+      <p id="submit-hint">全問回答すると採点できます</p>
+      <button class="btn btn-gold" id="submit-btn" onclick="submitQuiz()" disabled>採点する ✓</button>
+      <p class="unanswered-warning" id="unanswered-warning">未回答の問題があります。すべての問題に答えてから採点してください。</p>
+    </div>
+  </div>
+
+  <!-- Result Screen -->
+  <div id="result-screen">
+    <div class="score-card">
+      <div class="score-label">あなたのスコア</div>
+      <div class="score-number" id="score-number">0<span> / 50</span></div>
+      <div class="score-percent" id="score-percent">0%</div>
+      <div class="score-message" id="score-message"></div>
+    </div>
+
+    <div class="result-stats">
+      <div class="stat-box stat-correct">
+        <span class="stat-num" id="stat-correct">0</span>
+        正解
+      </div>
+      <div class="stat-box stat-wrong">
+        <span class="stat-num" id="stat-wrong">0</span>
+        不正解
+      </div>
+    </div>
+
+    <div class="review-section">
+      <h2 id="review-title">間違えた問題の解説</h2>
+      <div id="review-container"></div>
+    </div>
+
+    <div class="back-to-top">
+      <button class="btn" onclick="retryQuiz()">もう一度挑戦する</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  {
+    q: "ブドウ果汁の糖分を発酵させる微生物は何か？",
+    choices: ["酵母菌", "乳酸菌", "麹菌"],
+    answer: 0,
+    explanation: "ワインの発酵は<strong>酵母菌</strong>がブドウ糖をアルコールと二酸化炭素に分解することで起こります。乳酸菌はマロラクティック発酵で使われ、麹菌は日本酒などに使われます。"
+  },
+  {
+    q: "ワインに関する法律が記載された古代バビロニアの法典は？",
+    choices: ["ハンムラビ法典", "ナポレオン法典", "ローゼッタストーン"],
+    answer: 0,
+    explanation: "紀元前1750年頃の<strong>ハンムラビ法典</strong>には、ワインの販売・品質に関する規定が含まれています。現存する世界最古のワイン関連法律とされています。"
+  },
+  {
+    q: "フィロキセラの別名は？",
+    choices: ["ブドウネアブラムシ", "ブドウカイガラムシ", "ブドウハダニ"],
+    answer: 0,
+    explanation: "<strong>フィロキセラ（ブドウネアブラムシ）</strong>は19世紀後半にヨーロッパのブドウ畑を壊滅させた害虫です。北米原産で、ブドウの根に寄生して枯死させます。"
+  },
+  {
+    q: "クレマンはどのカテゴリに分類されるか？",
+    choices: ["スパークリングワイン", "フォーティファイドワイン", "スティルワイン"],
+    answer: 0,
+    explanation: "<strong>クレマン</strong>はフランスのシャンパーニュ地方以外で造られる瓶内二次発酵スパークリングワインの総称です。アルザス・クレマン、ブルゴーニュ・クレマンなどがあります。"
+  },
+  {
+    q: "マデイラはどのカテゴリに分類されるか？",
+    choices: ["フォーティファイドワイン", "スパークリングワイン", "オレンジワイン"],
+    answer: 0,
+    explanation: "<strong>マデイラ</strong>はポルトガルのマデイラ島で造られるフォーティファイドワイン（酒精強化ワイン）です。発酵途中にブランデーを加えアルコール度数を高めます。シェリー・ポートも同じ分類。"
+  },
+  {
+    q: "ブドウ栽培に最適な年平均気温は？",
+    choices: ["10〜16℃", "5〜10℃", "16〜22℃"],
+    answer: 0,
+    explanation: "<strong>10〜16℃</strong>が良質なワイン用ブドウに適した年平均気温です。この温度帯が北緯・南緯30〜50度に相当し、世界の主要ワイン産地が集中しています。"
+  },
+  {
+    q: "ブドウの生育に望ましい年間降水量は？",
+    choices: ["500〜900mm", "200〜500mm", "900〜1200mm"],
+    answer: 0,
+    explanation: "<strong>500〜900mm</strong>が理想的な年間降水量です。少なすぎると水不足、多すぎると病気の原因になります。灌漑が禁止されている地域では自然降雨のみに頼ります。"
+  },
+  {
+    q: "北半球で気温が何℃を超えるとブドウは休眠から目覚めるか？",
+    choices: ["10℃", "5℃", "15℃"],
+    answer: 0,
+    explanation: "<strong>10℃</strong>を超えると根が養分の吸収を再開し、新芽が芽吹き始めます（萌芽）。この時期から霜害のリスクが高まり、生産者は注意が必要です。"
+  },
+  {
+    q: "赤ワインの醸造工程の正しい順序は？",
+    choices: [
+      "除梗・破砕 → 主発酵・醸し → 圧搾 → 樽・タンク育成",
+      "圧搾 → 主発酵・醸し → 除梗・破砕 → 樽・タンク育成",
+      "除梗・破砕 → 圧搾 → 主発酵・醸し → 樽・タンク育成"
+    ],
+    answer: 0,
+    explanation: "赤ワインは<strong>除梗・破砕→主発酵・醸し（果皮ごと発酵）→圧搾→熟成</strong>の順です。果皮と一緒に発酵させることで色素（アントシアニン）とタンニンを抽出します。"
+  },
+  {
+    q: "白ワインのマロラクティック発酵（MLF）を行う主な目的は？",
+    choices: ["酸味をやわらげるため", "甘みを増やすため", "アルコール度数を上げるため"],
+    answer: 0,
+    explanation: "<strong>マロラクティック発酵</strong>では乳酸菌がリンゴ酸を乳酸に変換します。乳酸はリンゴ酸より穏やかな酸なので、ワインの酸味が丸く柔らかくなります。ブルゴーニュの白などで行われます。"
+  },
+  {
+    q: "直接圧搾法で造ったロゼワインの特徴は？",
+    choices: [
+      "明るい色合いで白ワインに近い個性",
+      "濃い色合いで赤ワインに近い個性",
+      "泡立ちが特徴のスパークリングに近い個性"
+    ],
+    answer: 0,
+    explanation: "直接圧搾法は黒ブドウを果皮ごと軽く圧搾してすぐに果汁を分離するため、色素抽出が少なく<strong>明るく淡い色</strong>で白ワインに近い繊細な個性になります。"
+  },
+  {
+    q: "シャルマ方式（シャルマ法）でスパークリングワインの二次発酵を行う場所は？",
+    choices: ["密閉タンク内", "瓶内", "樽内"],
+    answer: 0,
+    explanation: "<strong>シャルマ方式（タンク方式）</strong>は密閉した大型タンクに酵母と糖分を加えて二次発酵を行います。プロセッコはこの方式で造られます。コストを抑えながら大量生産が可能。"
+  },
+  {
+    q: "瓶内二次発酵方式で造られるスペインのスパークリングワインは？",
+    choices: ["カバ（Cava）", "プロセッコ", "フランチャコルタ"],
+    answer: 0,
+    explanation: "<strong>カバ</strong>はスペインのカタルーニャ地方を中心に生産される瓶内二次発酵のスパークリングワインです。プロセッコ（イタリア）はタンク方式、フランチャコルタ（イタリア）は瓶内二次発酵。"
+  },
+  {
+    q: "シャブリに使用されるブドウ品種は？",
+    choices: ["シャルドネ", "ソーヴィニヨン・ブラン", "リースリング"],
+    answer: 0,
+    explanation: "シャブリはフランス・ブルゴーニュ北部の産地で、100%<strong>シャルドネ</strong>で造られます。石灰質土壌（キンメリジャン）由来のミネラル感と引き締まった酸味が特徴です。"
+  },
+  {
+    q: "ボルドー地方で最も多く生産される黒ブドウ品種は？",
+    choices: ["メルロ", "カベルネ・ソーヴィニヨン", "カベルネ・フラン"],
+    answer: 0,
+    explanation: "ボルドー全体で見ると<strong>メルロ</strong>が最多栽培品種です。右岸（サンテミリオン、ポムロール）で特に多く、左岸（メドック）ではカベルネ・ソーヴィニヨンが主役。勘違いしやすい問題です。"
+  },
+  {
+    q: "柑橘類やハーブの香りとシャープな酸味が特徴で、近年ニュージーランドで高評価を得ている白ワイン用品種は？",
+    choices: ["ソーヴィニヨン・ブラン", "シャルドネ", "リースリング"],
+    answer: 0,
+    explanation: "<strong>ソーヴィニヨン・ブラン</strong>はニュージーランドのマールボロ地区で世界的注目を集めました。青草・グレープフルーツ・パッションフルーツの香りとフレッシュな酸味が特徴です。"
+  },
+  {
+    q: "甲州の栽培面積が最も大きい都道府県は？",
+    choices: ["山梨県", "長野県", "北海道"],
+    answer: 0,
+    explanation: "<strong>山梨県</strong>は日本最大のワイン産地で、甲州ブドウの生産量・栽培面積ともに圧倒的第1位です。甲府盆地の扇状地が栽培に適しています。"
+  },
+  {
+    q: "カベルネ・ソーヴィニヨンがボルドー以外で単一品種として使われることが多い産地は？",
+    choices: ["カリフォルニア州やチリ", "オーストラリアや南アフリカ", "アルゼンチンやスペイン"],
+    answer: 0,
+    explanation: "<strong>カリフォルニア（ナパ・ヴァレー）</strong>とチリはカベルネ・ソーヴィニヨンを単一品種でスタイリッシュに仕上げることで有名です。ボルドーでは複数品種のブレンドが伝統的。"
+  },
+  {
+    q: "シャンパーニュの主要品種でもある赤ワイン用ブドウ品種は？",
+    choices: ["ピノ・ノワール", "メルロ", "ガメイ"],
+    answer: 0,
+    explanation: "<strong>ピノ・ノワール</strong>はシャンパーニュの3主要品種（ピノ・ノワール、ムニエ、シャルドネ）の一つです。原産はブルゴーニュ地方で、繊細でエレガントな赤ワインを生みます。"
+  },
+  {
+    q: "ドイツやフランスのアルザス地方が主産地で、甘口から辛口まで幅広いスタイルで造られる品種は？",
+    choices: ["リースリング", "ゲヴュルツトラミネール", "ピノ・グリ"],
+    answer: 0,
+    explanation: "<strong>リースリング</strong>はドイツを代表する白ブドウ品種で、フルドライから極甘口まで幅広く造られます。高い酸と花・果物の香り、長期熟成能力が特徴です。"
+  },
+  {
+    q: "ボルドー地方原産で、柔らかなタンニンが持ち味。サンテミリオンやポムロールで世界的銘酒を生む品種は？",
+    choices: ["メルロ", "カベルネ・ソーヴィニヨン", "マルベック"],
+    answer: 0,
+    explanation: "ペトリュスやル・パンで知られるポムロール、シャトー・オーゾンヌのサンテミリオンは<strong>メルロ</strong>が主役。カベルネ・ソーヴィニヨンは左岸（メドック）が主体です。混同注意！"
+  },
+  {
+    q: "日本の赤ワイン用ブドウ品種で生産量第1位は？",
+    choices: ["マスカット・ベリーA", "甲州", "ピノ・ノワール"],
+    answer: 0,
+    explanation: "<strong>マスカット・ベリーA</strong>は川上善兵衛が育成した日本固有の交配品種で、日本で最も多く栽培される赤ワイン用品種です。フルーティーでやや軽めのワインになります。"
+  },
+  {
+    q: "ピノ・ノワールの原産地は？",
+    choices: ["フランスのブルゴーニュ地方", "フランスのボルドー地方", "フランスのシャンパーニュ地方"],
+    answer: 0,
+    explanation: "<strong>ブルゴーニュ地方</strong>がピノ・ノワールの原産地です。ロマネ・コンティやラ・ターシュなど最高峰の赤ワインを生みます。現在はニュージーランドやカリフォルニアでも高品質なものが作られています。"
+  },
+  {
+    q: "甲州ブドウの果皮の色は？",
+    choices: ["紫がかったピンク色", "黄緑色", "濃い紫色"],
+    answer: 0,
+    explanation: "<strong>甲州</strong>の果皮は薄い紫がかったピンク色（グレー系）が特徴です。この果皮から微量のタンニンや色素が溶け出し、淡いグレー系の白ワインになります。"
+  },
+  {
+    q: "ボルドー地方原産で長野県塩尻市でも造られる品種は？",
+    choices: ["メルロ", "カベルネ・ソーヴィニヨン", "タナ"],
+    answer: 0,
+    explanation: "<strong>メルロ</strong>は長野県塩尻市桔梗ヶ原でも優れたワインが造られています。ここは日本の「ポムロール」とも呼ばれ、メルロの銘醸地として国際的にも評価されています。"
+  },
+  {
+    q: "淡いピンク色の果皮を持ち、辛口から極甘口まで幅広く造られる品種は？",
+    choices: ["ゲヴュルツトラミネール", "リースリング", "ピノ・グリ"],
+    answer: 0,
+    explanation: "<strong>ゲヴュルツトラミネール</strong>はアルザス地方を代表する品種。ライチ・バラ・スパイスの独特な香りが特徴です。果皮は銅色〜薄ピンク色で、極甘口の遅摘みワインも有名。"
+  },
+  {
+    q: "イタリア北部原産で、バローロやバルバレスコを造る品種は？",
+    choices: ["ネッビオーロ", "サンジョヴェーゼ", "バルベーラ"],
+    answer: 0,
+    explanation: "<strong>ネッビオーロ</strong>はピエモンテ州を代表する黒ブドウ品種。タンニンが強く高酸で長期熟成型のバローロ「ワインの王」を生みます。サンジョヴェーゼはトスカーナのキャンティ用。"
+  },
+  {
+    q: "ドイツのフランケン地方で「ボックスボイテル」というボトルに詰められる、オーストリア原産の白ブドウ品種は？",
+    choices: ["ジルヴァーナー（シルヴァーナー）", "グリューナー・ヴェルトリーナー", "リースリング"],
+    answer: 0,
+    explanation: "<strong>ジルヴァーナー</strong>はオーストリア原産で、ドイツのフランケン地方で扁平な楕円形ボトル「ボックスボイテル」に詰められます。大粒で厚い果皮が特徴。"
+  },
+  {
+    q: "フランスのボージョレ地方で最も多く栽培される黒ブドウ品種は？",
+    choices: ["ガメイ", "ピノ・ノワール", "メルロ"],
+    answer: 0,
+    explanation: "<strong>ガメイ</strong>はボージョレ地方の主要品種で、フレッシュでフルーティー、低タンニンの飲みやすい赤ワインを生みます。ボージョレ・ヌーヴォーはガメイ100%で造られます。"
+  },
+  {
+    q: "砂糖漬けアンズ・オレンジ果皮・バラ・甘いスパイスが香る、フランスのローヌ地方北部原産の白ブドウ品種は？",
+    choices: ["ヴィオニエ", "マルサンヌ", "ルーサンヌ"],
+    answer: 0,
+    explanation: "<strong>ヴィオニエ</strong>はローヌ北部のコンドリューやシャトー・グリエで造られる個性豊かな白品種。芳醇な花・果物・スパイスの香りが特徴です。"
+  },
+  {
+    q: "ヨーロッパ原産だが現在はカリフォルニアで主要な赤ワイン用品種となっているのは？",
+    choices: ["ジンファンデル", "グルナッシュ", "テンプラニーリョ"],
+    answer: 0,
+    explanation: "<strong>ジンファンデル</strong>はクロアチア原産のプリミティーヴォと同一品種とされ、19世紀にカリフォルニアへ移植されました。濃厚で高アルコール、ブルーベリーやジャムのような果実味が特徴。"
+  },
+  {
+    q: "フランスのボルドー地方における貴腐ワインの主要品種は？",
+    choices: ["セミヨン", "ソーヴィニヨン・ブラン", "ミュスカ・ア・プティ・グラン"],
+    answer: 0,
+    explanation: "ソーテルヌの貴腐ワインは<strong>セミヨン</strong>が主体（80%前後）で造られます。薄い果皮が貴腐菌（ボトリティス・シネレア）に感染しやすく、濃縮した甘みを持つ稀少なワインになります。"
+  },
+  {
+    q: "フランスで「黒ワイン」と呼ばれた濃厚な色調で、現在アルゼンチンで広く栽培されている品種は？",
+    choices: ["マルベック", "タナ", "カベルネ・ソーヴィニヨン"],
+    answer: 0,
+    explanation: "<strong>マルベック</strong>はフランス・カオール産地で「黒ワイン」と呼ばれていました。19世紀にアルゼンチンへ渡り、メンドーサ地方でブラックフルーツ系の濃厚なワインとして大成功しています。"
+  },
+  {
+    q: "甘口やスパークリング向けで黄桃の香りを持つ、イタリアのトスカーナやサルデーニャ島が代表産地の白ブドウ品種は？",
+    choices: ["ヴェルメンティーノ", "ヴェルデッホ", "ガルガーネガ"],
+    answer: 0,
+    explanation: "<strong>ヴェルメンティーノ</strong>はイタリアのサルデーニャ島・リグーリア州などで栽培される白ブドウ。黄桃・白い花・アーモンドの香りが特徴で、軽快なスティルとスパークリング両方に使われます。"
+  },
+  {
+    q: "果皮が灰色を帯びた赤紫色で、白ワイン用として使われる品種は？",
+    choices: ["ピノ・グリ", "ゲヴュルツトラミネール", "ピノ・ブラン"],
+    answer: 0,
+    explanation: "<strong>ピノ・グリ</strong>（イタリア名：ピノ・グリージョ）はピノ・ノワールの変異種で、果皮が灰色〜淡い赤紫色ですが白ワインになります。アルザスでは豊かなコクの甘口も造られます。"
+  },
+  {
+    q: "チリで長年メルロと混同され、1994年のDNA鑑定で別品種と判明したのは？",
+    choices: ["カルメネール", "マルベック", "シラー"],
+    answer: 0,
+    explanation: "<strong>カルメネール</strong>はボルドー原産の品種ですが19世紀に欧州でほぼ絶滅。チリで「メルロ」として栽培されていたものが1994年にDNA鑑定で別品種と判明しました。現在チリの代表品種です。"
+  },
+  {
+    q: "フランスのローヌ北部ではスパイシーでエレガント、オーストラリアでは濃厚果実味と力強さが特徴となる品種は？",
+    choices: ["シラー（シラーズ）", "グルナッシュ", "ムールヴェードル"],
+    answer: 0,
+    explanation: "<strong>シラー</strong>はローヌ北部（エルミタージュ、コート・ロティ）が原産地。同じ品種でもオーストラリアでは「シラーズ」と呼ばれ、気候の違いから全く異なるスタイルのワインになります。"
+  },
+  {
+    q: "ワインのボトル形状からわかることは？",
+    choices: ["生産地や味のタイプ", "ヴィンテージ（収穫年）のみ", "アルコール度数のみ"],
+    answer: 0,
+    explanation: "<strong>ボルドー型（四角肩）・ブルゴーニュ型（なで肩）・アルザス型（細長）</strong>など、ボトルの形は生産地の伝統と関連しており、味のスタイルやブドウ品種を推測するヒントになります。"
+  },
+  {
+    q: "オーストラリアのラベルに「SHIRAZ」と記載される品種の正式な読み方は？",
+    choices: ["シラーズ", "シラー", "シラーニ"],
+    answer: 0,
+    explanation: "オーストラリアでは<strong>シラーズ（Shiraz）</strong>と呼びます。フランスでは「シラー（Syrah）」と呼ばれる同じ品種です。産地によって呼び名が異なるため注意が必要です。"
+  },
+  {
+    q: "シャンパーニュの甘辛度表示で「辛口」を表すのは？",
+    choices: ["ブリュット（Brut）", "ドゥー（Doux）", "デミ・セック（Demi-sec）"],
+    answer: 0,
+    explanation: "シャンパーニュの甘辛度は残糖量で分類されます。<strong>ブリュット</strong>は残糖12g/L未満で辛口の代表。ドゥーは50g/L以上で最も甘口、デミ・セックは中甘口（32〜50g/L）です。"
+  },
+  {
+    q: "フルボディのワインの特徴として正しいのは？",
+    choices: [
+      "濃厚な果実味と豊かなコク、重厚でどっしりとした飲み口",
+      "軽やかな果実味と繊細な味わい、フレッシュな酸味",
+      "シャープな酸とミネラル感が支配的な軽い飲み口"
+    ],
+    answer: 0,
+    explanation: "<strong>フルボディ</strong>は口の中に広がる充実感・重さ・コクが特徴です。カベルネ・ソーヴィニヨンやシラーなど濃厚な赤ワインが代表例。ライトボディは逆に軽快でピノ・ノワールなどが該当します。"
+  },
+  {
+    q: "ワインの温度を上げると味わいはどう変化するか？",
+    choices: ["酸味が柔らかくなる", "アルコール感が弱くなる", "タンニンが増す"],
+    answer: 0,
+    explanation: "温度が上がると<strong>酸味は穏やかに感じられ</strong>ます。一方でアルコール感や香りは強くなります。赤ワインを常温より少し冷やすと酸味が際立ちフレッシュに感じられます。"
+  },
+  {
+    q: "ライトボディの赤ワインを提供する際の適温は？",
+    choices: ["13〜16℃", "8〜12℃", "18〜20℃"],
+    answer: 0,
+    explanation: "ライトボディの赤ワイン（ボージョレなど）は<strong>13〜16℃</strong>がベスト。フルボディの赤は16〜18℃、白ワインは8〜12℃、スパークリングは6〜10℃が一般的な提供温度です。"
+  },
+  {
+    q: "スパークリングワインを開栓する際の正しい扱い方は？",
+    choices: [
+      "ゆっくり静かにボトルを扱い、コルクをそっと外す",
+      "素早くコルクを引き抜く",
+      "ボトルを振ってから開栓する"
+    ],
+    answer: 0,
+    explanation: "スパークリングワインは<strong>ゆっくり静かに</strong>扱います。コルクを飛ばすと炭酸ガスと液体が噴き出し、ワインが無駄になります。サービスでは布で覆いながら静かにコルクを回し出すのが正式。"
+  },
+  {
+    q: "ワインを抜栓した後に起こることは？",
+    choices: ["香りの幅が広がる", "香りが完全に消える", "色が濃くなる"],
+    answer: 0,
+    explanation: "抜栓直後は空気に触れることで<strong>香りが開き（デキャンタージュ効果）</strong>、複雑な香りが感じられるようになります。ただし長時間放置すると酸化が進みます。"
+  },
+  {
+    q: "冷蔵庫でのワインの長期保存が不向きな主な理由は？",
+    choices: [
+      "コルクが乾燥して空気が入りやすくなるため",
+      "温度が低すぎてワインが凍るため",
+      "冷蔵庫の振動でワインが劣化するため"
+    ],
+    answer: 0,
+    explanation: "冷蔵庫の除湿機能で庫内が乾燥し、<strong>コルクが乾いて収縮</strong>します。すると外気が入りワインが酸化劣化します。長期保存には12〜15℃・湿度70%程度・振動なしのワインセラーが理想です。"
+  },
+  {
+    q: "抜栓後のワインが劣化する主な原因は？",
+    choices: ["酸化と温度変化", "光と振動", "湿度と気圧"],
+    answer: 0,
+    explanation: "抜栓後は<strong>酸化（空気接触）と温度変化</strong>が最大の劣化原因です。冷蔵保存・バキュームポンプでの脱気・早期消費が有効な対策です。"
+  },
+  {
+    q: "赤ワインの色が濃い場合、どのような産地と推測されるか？",
+    choices: ["日照が豊富で温暖な産地", "冷涼な高緯度の産地", "高標高で気温が低い産地"],
+    answer: 0,
+    explanation: "<strong>日照が豊富で温暖</strong>な産地では果皮のアントシアニン（色素）が多く蓄積され、色の濃いワインになります。冷涼産地のピノ・ノワールなどは逆に色が淡くなります。"
+  },
+  {
+    q: "ワインの「第2アロマ」とはいつ生まれる香りか？",
+    choices: ["発酵段階で生まれる香り", "ブドウ品種固有の香り", "樽熟成・瓶熟成で生まれる香り"],
+    answer: 0,
+    explanation: "アロマは3段階。第1アロマ：ブドウ品種由来、<strong>第2アロマ：発酵由来</strong>（酵母が生む酢酸エチル・バナナなど）、第3アロマ（ブーケ）：熟成由来（革・タバコ・土など）。"
+  },
+  {
+    q: "シェーブルタイプのチーズに合わせるのに最も適したワインは？",
+    choices: [
+      "辛口の白ワインまたはライトボディの赤ワイン",
+      "フルボディの赤ワイン",
+      "甘口のスパークリングワイン"
+    ],
+    answer: 0,
+    explanation: "山羊乳製の<strong>シェーブルチーズ</strong>はシャープな酸味とコクが特徴。酸味のある辛口白（ソーヴィニヨン・ブランなど）やライトボディの赤が合います。フルボディの赤はタンニンが強すぎ、チーズの風味を壊します。"
+  }
+];
+
+let userAnswers = new Array(questions.length).fill(null);
+let answeredCount = 0;
+
+function startQuiz() {
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  renderQuestions();
+}
+
+function renderQuestions() {
+  const container = document.getElementById('questions-container');
+  container.innerHTML = '';
+
+  questions.forEach((q, qi) => {
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.id = 'q-card-' + qi;
+
+    const choicesHtml = q.choices.map((c, ci) => `
+      <button class="choice-btn" id="choice-${qi}-${ci}" onclick="selectAnswer(${qi}, ${ci})">
+        ${['A', 'B', 'C'][ci]}. ${c}
+      </button>
+    `).join('');
+
+    card.innerHTML = `
+      <div class="question-number">問題 ${qi + 1} / ${questions.length}</div>
+      <div class="question-text">${q.q}</div>
+      <div class="choices">${choicesHtml}</div>
+    `;
+    container.appendChild(card);
+  });
+
+  updateProgress();
+}
+
+function selectAnswer(qi, ci) {
+  const prev = userAnswers[qi];
+  if (prev === null) {
+    answeredCount++;
+  }
+  userAnswers[qi] = ci;
+
+  // Update button styles
+  const card = document.getElementById('q-card-' + qi);
+  card.querySelectorAll('.choice-btn').forEach((btn, i) => {
+    btn.classList.toggle('selected', i === ci);
+  });
+
+  updateProgress();
+  checkSubmitReady();
+}
+
+function updateProgress() {
+  const pct = Math.round((answeredCount / questions.length) * 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `回答済み: ${answeredCount} / ${questions.length}`;
+}
+
+function checkSubmitReady() {
+  const btn = document.getElementById('submit-btn');
+  const hint = document.getElementById('submit-hint');
+  if (answeredCount === questions.length) {
+    btn.disabled = false;
+    hint.textContent = '全問回答しました！採点してください。';
+    hint.style.color = 'var(--correct)';
+  } else {
+    btn.disabled = true;
+    hint.textContent = `残り ${questions.length - answeredCount} 問あります`;
+    hint.style.color = '';
+  }
+}
+
+function submitQuiz() {
+  if (answeredCount < questions.length) {
+    document.getElementById('unanswered-warning').style.display = 'block';
+    return;
+  }
+
+  let correct = 0;
+  questions.forEach((q, i) => {
+    if (userAnswers[i] === q.answer) correct++;
+  });
+  const wrong = questions.length - correct;
+  const pct = Math.round((correct / questions.length) * 100);
+
+  // Show result screen
+  document.getElementById('quiz-screen').style.display = 'none';
+  document.getElementById('result-screen').style.display = 'block';
+
+  document.getElementById('score-number').innerHTML = `${correct}<span> / ${questions.length}</span>`;
+  document.getElementById('score-percent').textContent = `正答率 ${pct}%`;
+  document.getElementById('stat-correct').textContent = correct;
+  document.getElementById('stat-wrong').textContent = wrong;
+
+  let msg = '';
+  if (pct === 100) msg = '完璧です！満点おめでとうございます！🎉';
+  else if (pct >= 90) msg = '素晴らしい！ほぼ完璧な理解度です！';
+  else if (pct >= 70) msg = '良い結果です！苦手な分野を復習しましょう。';
+  else if (pct >= 50) msg = 'もう少し！復習して再挑戦してみましょう。';
+  else msg = '基礎からしっかり復習しましょう。';
+  document.getElementById('score-message').textContent = msg;
+
+  // Review section
+  const reviewContainer = document.getElementById('review-container');
+  reviewContainer.innerHTML = '';
+
+  if (wrong === 0) {
+    document.getElementById('review-title').textContent = '全問正解！';
+    reviewContainer.innerHTML = '<div class="all-correct-msg">🎊 全問正解おめでとうございます！</div>';
+  } else {
+    document.getElementById('review-title').textContent = `間違えた問題の解説（${wrong}問）`;
+    questions.forEach((q, i) => {
+      if (userAnswers[i] !== q.answer) {
+        const item = document.createElement('div');
+        item.className = 'review-item wrong-item';
+
+        const yourChoice = q.choices[userAnswers[i]];
+        const correctChoice = q.choices[q.answer];
+
+        item.innerHTML = `
+          <div class="review-q-num">✗ 問題 ${i + 1}</div>
+          <div class="review-q-text">${q.q}</div>
+          <div class="review-answer-row">
+            <span class="badge badge-your">あなたの回答: ${yourChoice}</span>
+            <span class="badge badge-correct">正解: ${correctChoice}</span>
+          </div>
+          <div class="explanation">💡 ${q.explanation}</div>
+        `;
+        reviewContainer.appendChild(item);
+      }
+    });
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function retryQuiz() {
+  userAnswers = new Array(questions.length).fill(null);
+  answeredCount = 0;
+  document.getElementById('result-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  document.getElementById('submit-btn').disabled = true;
+  document.getElementById('submit-hint').textContent = '全問回答すると採点できます';
+  document.getElementById('submit-hint').style.color = '';
+  document.getElementById('unanswered-warning').style.display = 'none';
+  renderQuestions();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>
