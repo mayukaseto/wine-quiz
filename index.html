@@ -162,10 +162,14 @@
   .choice-btn:disabled { cursor: default; }
 
   /* Hint */
-  .hint-wrap {
+  details.hint-wrap {
     margin-top: 1rem;
   }
-  .hint-toggle {
+  details.hint-wrap summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    list-style: none;
     background: none;
     border: 1px solid var(--gold);
     border-radius: 9999px;
@@ -173,16 +177,15 @@
     font-size: 0.82rem;
     padding: 0.3rem 1rem;
     cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
     transition: background 0.2s;
+    user-select: none;
   }
-  .hint-toggle:hover { background: #fff8e1; }
-  .hint-toggle .arrow { transition: transform 0.2s; display: inline-block; }
-  .hint-toggle.open .arrow { transform: rotate(180deg); }
+  details.hint-wrap summary::-webkit-details-marker { display: none; }
+  details.hint-wrap summary::marker { display: none; }
+  details.hint-wrap summary:hover { background: #fff8e1; }
+  details.hint-wrap summary .arrow { transition: transform 0.25s; display: inline-block; }
+  details.hint-wrap[open] summary .arrow { transform: rotate(180deg); }
   .hint-body {
-    display: none;
     margin-top: 0.6rem;
     background: #fffbf0;
     border-left: 3px solid var(--gold);
@@ -192,7 +195,6 @@
     color: #5a4a00;
     line-height: 1.7;
   }
-  .hint-body.open { display: block; }
 
   /* Navigation */
   .nav-row {
@@ -843,12 +845,10 @@ function renderQuestions() {
     `).join('');
 
     const hintHtml = q.hint ? `
-      <div class="hint-wrap">
-        <button class="hint-toggle" onclick="toggleHint(this)">
-          💡 ヒント <span class="arrow">▼</span>
-        </button>
+      <details class="hint-wrap">
+        <summary>💡 ヒント <span class="arrow">▼</span></summary>
         <div class="hint-body">${q.hint}</div>
-      </div>` : '';
+      </details>` : '';
 
     card.innerHTML = `
       <div class="question-number">問題 ${qi + 1} / ${questions.length}</div>
@@ -862,10 +862,6 @@ function renderQuestions() {
   updateProgress();
 }
 
-function toggleHint(btn) {
-  btn.classList.toggle('open');
-  btn.nextElementSibling.classList.toggle('open');
-}
 
 function selectAnswer(qi, ci) {
   const prev = userAnswers[qi];
