@@ -951,32 +951,29 @@ function submitQuiz() {
   const reviewContainer = document.getElementById('review-container');
   reviewContainer.innerHTML = '';
 
-  if (wrong === 0) {
-    document.getElementById('review-title').textContent = '全問正解！';
-    reviewContainer.innerHTML = '<div class="all-correct-msg">🎊 全問正解おめでとうございます！</div>';
-  } else {
-    document.getElementById('review-title').textContent = `間違えた問題の解説（${wrong}問）`;
-    questions.forEach((q, i) => {
-      if (userAnswers[i] !== shuffledQuestions[i].answer) {
-        const item = document.createElement('div');
-        item.className = 'review-item wrong-item';
+  document.getElementById('review-title').textContent = wrong === 0 ? '全問正解！全問の解説' : `全問の解説（正解 ${correct}問 ／ 不正解 ${wrong}問）`;
 
-        const yourChoice = shuffledQuestions[i].choices[userAnswers[i]];
-        const correctChoice = shuffledQuestions[i].choices[shuffledQuestions[i].answer];
+  questions.forEach((q, i) => {
+    const isCorrect = userAnswers[i] === shuffledQuestions[i].answer;
+    const item = document.createElement('div');
+    item.className = 'review-item ' + (isCorrect ? 'correct-item' : 'wrong-item');
 
-        item.innerHTML = `
-          <div class="review-q-num">✗ 問題 ${i + 1}</div>
-          <div class="review-q-text">${q.q}</div>
-          <div class="review-answer-row">
-            <span class="badge badge-your">あなたの回答: ${yourChoice}</span>
-            <span class="badge badge-correct">正解: ${correctChoice}</span>
-          </div>
-          <div class="explanation">💡 ${q.explanation}</div>
-        `;
-        reviewContainer.appendChild(item);
-      }
-    });
-  }
+    const yourChoice = shuffledQuestions[i].choices[userAnswers[i]];
+    const correctChoice = shuffledQuestions[i].choices[shuffledQuestions[i].answer];
+
+    const answerRow = isCorrect
+      ? `<span class="badge badge-your-correct">✓ 正解: ${correctChoice}</span>`
+      : `<span class="badge badge-your">あなたの回答: ${yourChoice}</span>
+         <span class="badge badge-correct">正解: ${correctChoice}</span>`;
+
+    item.innerHTML = `
+      <div class="review-q-num">${isCorrect ? '✓ 正解' : '✗ 不正解'} ｜ 問題 ${i + 1}</div>
+      <div class="review-q-text">${q.q}</div>
+      <div class="review-answer-row">${answerRow}</div>
+      <div class="explanation">💡 ${q.explanation}</div>
+    `;
+    reviewContainer.appendChild(item);
+  });
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
